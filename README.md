@@ -41,7 +41,7 @@ No administrator privileges are required. The plugin needs Omarchy/Hyprland, Qui
 
 ## Use
 
-1. Click the ◐ icon in the bar.
+1. Click the film icon in the bar.
 2. Choose **quick mood test**, **use my letterboxd watchlist**, or **surprise me**.
 3. For Letterboxd: type your username, wait for the sync, then answer the quiz.
 4. Read the three picks, open "where to watch ↗" or Letterboxd if one calls you.
