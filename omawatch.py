@@ -11,6 +11,7 @@ Subcommands (stdin carries a JSON request, stdout receives one JSON answer):
 The helper never writes anything to disk and never stores the username.
 """
 import base64
+import concurrent.futures
 import json
 import os
 import sys
@@ -140,10 +141,56 @@ def _mood_from_answers(answers):
     return m
 
 
+def _canonical_route_key(mood):
+    """Match the web app's editorial routing for anonymous recommendations."""
+    m = mood if isinstance(mood, dict) else {}
+    if m.get("trust") == "horror" or m.get("appetite") == "horror" or m.get("first_act") == "thriller_horror":
+        return "editorial_horror"
+    if m.get("runtime") == "short":
+        return "editorial_short"
+    if m.get("tone") != "dark" and (
+        m.get("trust") == "comfort_light"
+        or m.get("appetite") == "comfort"
+        or m.get("want") == "soothed"
+        or m.get("depth") == "warm"
+        or (m.get("tone") == "light" and (m.get("energy") == "unwind" or m.get("depth") == "fun"))
+    ):
+        return "comfort_light"
+    if m.get("trust") == "weird" or m.get("appetite") == "weird":
+        return "editorial_weird"
+    if m.get("trust") == "thriller" or m.get("first_act") == "thriller_horror":
+        return "editorial_noir"
+    if m.get("trust") == "comedy" or m.get("appetite") == "comedy":
+        return "editorial_comedy"
+    if m.get("region") == "latam":
+        return "editorial_latam"
+    if m.get("language_pref") == "asian":
+        return "editorial_asian"
+    if m.get("decade") == "old" or m.get("trust") == "classic_bw" or m.get("appetite") == "classic_bw":
+        return "editorial_classic"
+    if m.get("appetite") == "lost-20s":
+        return "editorial_lost20s"
+    if m.get("memory") == "heartbreak" or m.get("depth") == "ruined" or m.get("want") == "haunted":
+        return "editorial_hurt"
+    if m.get("first_act") == "fantasy_scifi":
+        return "sci_fi_thought"
+    if m.get("first_act") == "action_adventure" or m.get("energy") == "engage":
+        return "editorial_pace"
+    if m.get("tone") == "dark" or m.get("depth") == "uneasy":
+        return "editorial_dark"
+    if m.get("risk") == "discover" or m.get("popularity") == "low":
+        return "editorial_discovery"
+    if m.get("depth") == "thoughtful" or m.get("energy") == "unwind":
+        return "editorial_beautiful"
+    return "editorial_quality"
+
+
 def _recommend_params(request, with_watchlist):
     lang = request.get("lang") if request.get("lang") in ("es", "en") else "es"
     country = str(request.get("country") or "CL").upper()[:2]
     mood = _mood_from_answers(request.get("answers") or {})
+    if not with_watchlist:
+        mood["route_key"] = _canonical_route_key(mood)
     mood_b64 = base64.b64encode(json.dumps(mood).encode()).decode()
     params = {
         "lang": lang,
@@ -158,12 +205,56 @@ def _recommend_params(request, with_watchlist):
     return params
 
 
+def _merge_english_presentation(films, english_films):
+    """Apply the mood-watch presentation rule to one shelf.
+
+    Titles and posters stay English unless the film itself is
+    Spanish-language; overview and genres keep the page language.
+    """
+    by_id = {}
+    for alt in english_films if isinstance(english_films, list) else []:
+        if isinstance(alt, dict) and alt.get("id") is not None:
+            by_id[alt.get("id")] = alt
+    merged = []
+    for film in films if isinstance(films, list) else []:
+        if not isinstance(film, dict):
+            continue
+        alt = by_id.get(film.get("id"))
+        if alt is None or str(film.get("original_language") or "").lower() == "es":
+            merged.append(film)
+            continue
+        out = dict(film)
+        if alt.get("title"):
+            out["title"] = alt["title"]
+        if alt.get("poster"):
+            out["poster"] = alt["poster"]
+        merged.append(out)
+    return merged
+
+
+def _fetch_localized_films(path, params, headers=None):
+    """Fetch the shelf in the page language; on Spanish pages also fetch the
+    English variant in parallel and merge titles/posters best-effort."""
+    lang = params.get("lang", "es")
+    if lang != "es":
+        status, data = _request(path, params, headers=headers)
+        return status, data, data.get("films") or []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        local = pool.submit(_request, path, dict(params, lang="es"), headers=headers)
+        english = pool.submit(_request, path, dict(params, lang="en"), headers=headers)
+        status, data = local.result()
+        en_status, en_data = english.result()
+    films = data.get("films") or []
+    if en_status == 200 and en_data.get("ok"):
+        films = _merge_english_presentation(films, en_data.get("films") or [])
+    return status, data, films
+
+
 def cmd_recommend(request):
     params = _recommend_params(request, with_watchlist=False)
-    status, data = _request("/recommend", params)
+    status, data, films = _fetch_localized_films("/recommend", params)
     if status != 200 or not data.get("ok"):
         _fail(data.get("error") or "recommend-unavailable")
-    films = data.get("films") or []
     if not films:
         _fail("no-picks")
     _ok({"ok": True, "films": films[:3]})
@@ -174,12 +265,11 @@ def cmd_recommend_wl(request):
     if not token:
         _fail("watchlist-token-missing")
     params = _recommend_params(request, with_watchlist=True)
-    status, data = _request(
+    status, data, films = _fetch_localized_films(
         "/recommend", params, headers={"X-Moodwatch-Watchlist-Token": token}
     )
     if status != 200 or not data.get("ok"):
         _fail(data.get("error") or "recommend-unavailable")
-    films = data.get("films") or []
     if not films:
         _fail("no-picks")
     _ok({"ok": True, "films": films[:3]})
@@ -188,7 +278,9 @@ def cmd_recommend_wl(request):
 def cmd_surprise(request):
     lang = request.get("lang") if request.get("lang") in ("es", "en") else "es"
     country = str(request.get("country") or "CL").upper()[:2]
-    profile = str(request.get("profile") or "cozy")
+    # Unknown profiles silently fall back to a generic shelf on the API. Keep
+    # the blind button on the audited quality shelf instead of inventing one.
+    profile = str(request.get("profile") or "quality")
     params = {
         "lang": lang,
         "country": country,
@@ -197,10 +289,9 @@ def cmd_surprise(request):
         "profile": profile,
         "seed": str(int(request.get("seed") or 0) % 1000000007),
     }
-    status, data = _request("/surprise", params)
+    status, data, films = _fetch_localized_films("/surprise", params)
     if status != 200 or not data.get("ok"):
         _fail(data.get("error") or "surprise-unavailable")
-    films = data.get("films") or []
     if not films:
         _fail("no-picks")
     _ok({"ok": True, "films": films[:3]})

@@ -11,6 +11,14 @@ Item {
   readonly property string pluginId: "io.github.brm-src.omawatch"
   readonly property bool isSpanish: uiLanguage === "es"
   readonly property int cardWidth: Math.min(Style.space(700), panel.width - Style.gapsOut * 2)
+  readonly property int resultCardHeight: Style.space(170)
+  readonly property int panelHeight: root.phase === "results"
+    ? Style.space(700)
+    : root.phase === "quiz"
+      ? Style.space(340)
+      : root.phase === "letterboxd" || root.phase === "syncing"
+        ? Style.space(460)
+        : Style.space(240)
   property bool opened: false
   property bool busy: false
   property int requestId: 0
@@ -245,11 +253,12 @@ Item {
     root.usingWatchlist = false
     root.phase = "results"
     root.status = root.words("Sorpréndeme…", "Surprise me…")
-    var profiles = ["cozy", "dark", "weird", "uplifting"]
     var payload = {
       lang: root.uiLanguage,
       country: "CL",
-      profile: profiles[Math.floor(Math.random() * profiles.length)],
+      // The API has no cozy/dark/uplifting profiles; unknown names fall back
+      // to an unrelated generic shelf. Quality is the audited blind shelf.
+      profile: "quality",
       seed: Math.floor(Math.random() * 1000000)
     }
     root.runHelper("surprise", payload, function(response) {
@@ -415,7 +424,7 @@ Item {
     BorderSurface {
       id: card
       width: root.cardWidth
-      height: Math.min(Style.space(640), parent.height - Style.bar.sizeHorizontal - Style.gapsOut * 3)
+      height: Math.min(root.panelHeight, parent.height - Style.bar.sizeHorizontal - Style.gapsOut * 2)
       anchors.top: parent.top
       anchors.right: parent.right
       anchors.topMargin: Style.bar.sizeHorizontal + Style.gapsOut
@@ -424,6 +433,7 @@ Item {
       color: Color.menu.background
       borderSpec: Border.surfaceSpec("menu", "border", Color.menu.border, Math.max(1, Style.space(2)))
       padding: Style.spacing.panelPadding
+      clip: true
       scale: 1
       opacity: 1
       Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
@@ -531,8 +541,8 @@ Item {
         Flickable {
           id: content
           width: parent.width
-          height: Math.max(80, parent.height - y - footerRow.height - Style.spacing.md * 2)
-          contentHeight: contentColumn.implicitHeight
+          height: Math.max(80, parent.height - y - (actionBar.visible ? actionBar.height : 0) - footerRow.height - Style.spacing.md)
+          contentHeight: contentColumn.implicitHeight + Style.spacing.lg
           clip: true
           boundsBehavior: Flickable.StopAtBounds
 
@@ -774,11 +784,11 @@ Item {
               ListView {
                 id: resultsList
                 width: parent.width
-                height: Math.max(0, root.films.length * Style.space(166) + Math.max(0, root.films.length - 1) * Style.spacing.md)
+                height: Math.max(0, root.films.length * root.resultCardHeight + Math.max(0, root.films.length - 1) * Style.spacing.md)
                 model: root.films
                 spacing: Style.spacing.md
                 interactive: false
-                clip: false
+                clip: true
 
                 delegate: BorderSurface {
                   width: resultsList.width
@@ -788,11 +798,14 @@ Item {
                     ? Border.controlSpec("accent", Color.menu.text, Color.accent)
                     : Border.surfaceSpec("menu", "border", Color.menu.border, Math.max(1, Style.space(2)))
                   padding: Style.spacing.controlPaddingX
-                  height: Style.space(166)
+                  height: root.resultCardHeight
                   visible: true
+                  clip: true
 
                   Row {
                     id: filmRow
+                    x: parent.contentLeftInset
+                    y: parent.contentTopInset
                     width: parent.width - parent.contentLeftInset - parent.contentRightInset
                     height: parent.height - parent.contentTopInset - parent.contentBottomInset
                     spacing: Style.spacing.md
@@ -827,7 +840,7 @@ Item {
                         font.pixelSize: Style.font.body
                         font.bold: index === 0
                         wrapMode: Text.Wrap
-                        maximumLineCount: 2
+                        maximumLineCount: 1
                         elide: Text.ElideRight
                       }
 
@@ -855,7 +868,7 @@ Item {
                         font.family: Style.font.menuFamily
                         font.pixelSize: Style.font.bodySmall
                         wrapMode: Text.Wrap
-                        maximumLineCount: 4
+                        maximumLineCount: 3
                         elide: Text.ElideRight
                       }
 
@@ -863,7 +876,7 @@ Item {
                         spacing: Style.spacing.md
 
                         Button {
-                          visible: root.safeHttpUrl(modelData.tmdb) !== ""
+                          visible: root.safeHttpUrl(modelData.justwatch) !== ""
                           text: root.words("dónde verla ↗", "where to watch ↗")
                           active: !root.busy
                           onClicked: root.openFilmLink(modelData, "justwatch")
@@ -880,40 +893,38 @@ Item {
                   }
                 }
               }
-
-              Column {
-                width: parent.width
-                spacing: Style.spacing.md
-
-                Button {
-                  width: parent.width
-                  text: root.words("← otro ánimo", "← another mood")
-                  active: !root.busy
-                  onClicked: { root.resetQuiz(); root.phase = "quiz" }
-                }
-
-                Row {
-                  width: parent.width
-                  spacing: Style.spacing.md
-
-                  Item { width: Math.max(0, parent.width - againBtn.width - homeBtn.width - parent.spacing); height: 1 }
-
-                  Button {
-                    id: againBtn
-                    text: root.words("otra ronda", "another round")
-                    active: !root.busy
-                    onClicked: root.finishQuiz()
-                  }
-
-                  Button {
-                    id: homeBtn
-                    text: root.words("inicio", "home")
-                    active: !root.busy
-                    onClicked: { root.phase = "home" }
-                  }
-                }
-              }
             }
+          }
+        }
+
+        // ---- results actions: fixed row, never clipped by the scroll ----
+        Row {
+          id: actionBar
+          width: parent.width
+          visible: root.phase === "results"
+          spacing: Style.spacing.md
+
+          Button {
+            id: backToMoodBtn
+            text: root.words("← otro ánimo", "← another mood")
+            active: !root.busy
+            onClicked: { root.resetQuiz(); root.status = ""; root.phase = "quiz" }
+          }
+
+          Item { width: Math.max(0, parent.width - backToMoodBtn.width - againBtn.width - homeBtn.width - parent.spacing * 2); height: 1 }
+
+          Button {
+            id: againBtn
+            text: root.words("otra ronda", "another round")
+            active: !root.busy
+            onClicked: root.finishQuiz()
+          }
+
+          Button {
+            id: homeBtn
+            text: root.words("inicio", "home")
+            active: !root.busy
+            onClicked: { root.phase = "home" }
           }
         }
 
@@ -921,6 +932,7 @@ Item {
         Row {
           id: footerRow
           width: parent.width
+          height: Style.space(24)
           spacing: Style.spacing.md
 
           Item {
@@ -931,7 +943,7 @@ Item {
           Item {
             id: poweredBy
             width: Style.space(190)
-            height: parent.height
+            height: footerRow.height
 
             Text {
               textFormat: Text.PlainText

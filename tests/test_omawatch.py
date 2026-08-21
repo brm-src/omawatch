@@ -10,6 +10,14 @@ import omawatch
 
 
 class MoodMappingTests(unittest.TestCase):
+    def test_horror_answers_choose_editorial_horror_route(self):
+        mood = omawatch._mood_from_answers({"appetite": "horror", "tone": "dark"})
+        self.assertEqual(omawatch._canonical_route_key(mood), "editorial_horror")
+
+    def test_warm_answers_choose_comfort_route(self):
+        mood = omawatch._mood_from_answers({"appetite": "comfort", "depth": "warm", "tone": "light"})
+        self.assertEqual(omawatch._canonical_route_key(mood), "comfort_light")
+
     def test_drained_state_maps_to_safe_unwind(self):
         mood = omawatch._mood_from_answers({"state": "drained"})
         self.assertEqual(mood["energy"], "unwind")
@@ -36,6 +44,28 @@ class MoodMappingTests(unittest.TestCase):
 
     def test_unknown_answers_are_ignored(self):
         self.assertEqual(omawatch._mood_from_answers({"state": "???"}), {})
+
+
+class EnglishPresentationTests(unittest.TestCase):
+    def test_foreign_film_takes_english_title_and_poster(self):
+        films = [{"id": 1, "title": "Tránsito", "poster": "es.jpg", "original_language": "de", "overview": "sinopsis en español"}]
+        english = [{"id": 1, "title": "Transit", "poster": "en.jpg", "overview": "english plot"}]
+        merged = omawatch._merge_english_presentation(films, english)
+        self.assertEqual(merged[0]["title"], "Transit")
+        self.assertEqual(merged[0]["poster"], "en.jpg")
+        self.assertEqual(merged[0]["overview"], "sinopsis en español")
+
+    def test_spanish_language_film_keeps_its_title(self):
+        films = [{"id": 2, "title": "Roma", "poster": "es.jpg", "original_language": "es"}]
+        english = [{"id": 2, "title": "Roma", "poster": "en.jpg"}]
+        merged = omawatch._merge_english_presentation(films, english)
+        self.assertEqual(merged[0]["title"], "Roma")
+        self.assertEqual(merged[0]["poster"], "es.jpg")
+
+    def test_missing_english_counterpart_is_kept_as_is(self):
+        films = [{"id": 3, "title": "X", "original_language": "fr"}]
+        merged = omawatch._merge_english_presentation(films, [])
+        self.assertEqual(merged[0]["title"], "X")
 
 
 class HelperCliTests(unittest.TestCase):
