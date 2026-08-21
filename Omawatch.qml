@@ -11,9 +11,8 @@ Item {
   readonly property string pluginId: "io.github.brm-src.omawatch"
   readonly property bool isSpanish: uiLanguage === "es"
   readonly property int cardWidth: Math.min(Style.space(700), panel.width - Style.gapsOut * 2)
-  readonly property int resultCardHeight: Style.space(170)
   readonly property int panelHeight: root.phase === "results"
-    ? Style.space(700)
+    ? Style.space(820)
     : root.phase === "quiz"
       ? Style.space(340)
       : root.phase === "letterboxd" || root.phase === "syncing"
@@ -199,12 +198,6 @@ Item {
     var genres = (film && film.genres) || []
     if (!genres.length) return ""
     return genres.slice(0, 3).join(" · ")
-  }
-
-  function overviewLine(film) {
-    var text = String((film && film.overview) || "")
-    if (!text) return ""
-    return text.length > 220 ? text.slice(0, 220).trim() + "…" : text
   }
 
   function safeHttpUrl(value) {
@@ -618,7 +611,7 @@ Item {
         Flickable {
           id: content
           width: parent.width
-          height: Math.max(80, parent.height - y - (actionBar.visible ? actionBar.height : 0) - footerRow.height - Style.spacing.md)
+          height: Math.max(80, parent.height - y - footerRow.height - Style.spacing.md)
           contentHeight: contentColumn.implicitHeight + Style.spacing.lg
           clip: true
           boundsBehavior: Flickable.StopAtBounds
@@ -897,7 +890,7 @@ Item {
               ListView {
                 id: resultsList
                 width: parent.width
-                height: Math.max(0, root.films.length * root.resultCardHeight + Math.max(0, root.films.length - 1) * Style.spacing.md)
+                height: contentHeight
                 model: root.films
                 spacing: Style.spacing.md
                 interactive: false
@@ -911,7 +904,7 @@ Item {
                     ? Border.controlSpec("accent", Color.menu.text, Color.accent)
                     : Border.surfaceSpec("menu", "border", Color.menu.border, Math.max(1, Style.space(2)))
                   padding: Style.spacing.controlPaddingX
-                  height: root.resultCardHeight
+                  height: Math.max(Style.space(170), filmRow.height + Style.spacing.controlPaddingX * 2)
                   visible: true
                   clip: true
 
@@ -920,7 +913,6 @@ Item {
                     x: parent.contentLeftInset
                     y: parent.contentTopInset
                     width: parent.width - parent.contentLeftInset - parent.contentRightInset
-                    height: parent.height - parent.contentTopInset - parent.contentBottomInset
                     spacing: Style.spacing.md
 
                     Image {
@@ -974,15 +966,14 @@ Item {
                       Text {
                         textFormat: Text.PlainText
                         width: parent.width
-                        visible: root.overviewLine(modelData) !== ""
-                        text: root.overviewLine(modelData)
+                        visible: String(modelData.overview || "") !== ""
+                        text: modelData.overview || ""
                         color: Color.menu.text
                         opacity: 0.72
                         font.family: Style.font.menuFamily
                         font.pixelSize: Style.font.bodySmall
                         wrapMode: Text.Wrap
-                        maximumLineCount: 3
-                        elide: Text.ElideRight
+                        elide: Text.ElideNone
                       }
 
                       Row {
@@ -1007,37 +998,38 @@ Item {
                 }
               }
             }
-          }
-        }
 
-        // ---- results actions: fixed row, never clipped by the scroll ----
-        Row {
-          id: actionBar
-          width: parent.width
-          visible: root.phase === "results"
-          spacing: Style.spacing.md
+            // Results actions travel with the results instead of overlaying
+            // the last card when a long synopsis needs scrolling.
+            Row {
+              id: actionBar
+              width: parent.width
+              visible: root.phase === "results"
+              spacing: Style.spacing.md
 
-          Button {
-            id: backToMoodBtn
-            text: root.words("← otro ánimo", "← another mood")
-            active: !root.busy
-            onClicked: { root.resetQuiz(); root.status = ""; root.phase = "quiz" }
-          }
+              Button {
+                id: backToMoodBtn
+                text: root.words("← otro ánimo", "← another mood")
+                active: !root.busy
+                onClicked: { root.resetQuiz(); root.status = ""; root.phase = "quiz" }
+              }
 
-          Item { width: Math.max(0, parent.width - backToMoodBtn.width - againBtn.width - homeBtn.width - parent.spacing * 2); height: 1 }
+              Item { width: Math.max(0, parent.width - backToMoodBtn.width - againBtn.width - homeBtn.width - parent.spacing * 2); height: 1 }
 
-          Button {
-            id: againBtn
-            text: root.words("otra ronda", "another round")
-            active: !root.busy
-            onClicked: root.finishQuiz()
-          }
+              Button {
+                id: againBtn
+                text: root.words("otra ronda", "another round")
+                active: !root.busy
+                onClicked: root.finishQuiz()
+              }
 
-          Button {
-            id: homeBtn
-            text: root.words("inicio", "home")
-            active: !root.busy
-            onClicked: { root.phase = "home" }
+              Button {
+                id: homeBtn
+                text: root.words("inicio", "home")
+                active: !root.busy
+                onClicked: { root.phase = "home" }
+              }
+            }
           }
         }
 
