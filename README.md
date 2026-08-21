@@ -4,6 +4,20 @@
 
 ![omawatch preview](preview.png)
 
+![omawatch icon](icon.png)
+
+## Real screenshots
+
+These are captures from the running plugin on an Omarchy desktop, not mockups:
+
+- [home](screenshots/01-home-final.png) — mood test, Letterboxd and surprise actions.
+- [quiz](screenshots/02-quiz-final.png) — five-question mood flow.
+- [Letterboxd](screenshots/03-letterboxd-final.png) — public watchlist connection.
+- [results](screenshots/04-results-final.png) — three live recommendations from mood-watch.app.
+- [desktop bar](screenshots/05-desktop-bar.png) — the real bar context with the film icon.
+
+The small film-reel icon in `icon.svg` is also used by the bar widget.
+
 A bilingual Omarchy / Quickshell panel that picks a film for tonight. Answer a five-question mood quiz — or connect your Letterboxd username and get picks from your own watchlist. Powered by [mood-watch.app](https://mood-watch.app).
 
 It is deliberately not a tracker or a social feed. It answers one question: what do I watch tonight?

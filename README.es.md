@@ -4,6 +4,20 @@
 
 ![vista previa de omawatch](preview.png)
 
+![icono de omawatch](icon.png)
+
+## Pantallazos reales
+
+Son capturas del plugin funcionando en un escritorio Omarchy, no mockups:
+
+- [inicio](screenshots/01-home-final.png) — test de ánimo, Letterboxd y sorpresa.
+- [test](screenshots/02-quiz-final.png) — flujo de cinco preguntas.
+- [Letterboxd](screenshots/03-letterboxd-final.png) — conexión con watchlist pública.
+- [resultados](screenshots/04-results-final.png) — tres recomendaciones reales de mood-watch.app.
+- [barra del escritorio](screenshots/05-desktop-bar.png) — contexto real de la barra con el icono de película.
+
+El pequeño icono de carrete en `icon.svg` también se usa en la barra.
+
 Panel bilingüe de Omarchy / Quickshell que elige una película para hoy. Responde un test de ánimo de cinco preguntas — o conecta tu usuario de Letterboxd y recibe recomendaciones de tu propia watchlist. Impulsado por [mood-watch.app](https://mood-watch.app).
 
 No es un tracker ni un feed social. Responde una sola pregunta: ¿qué veo hoy?

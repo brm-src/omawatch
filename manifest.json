@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.brm-src.omawatch",
   "name": "omawatch",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Cris / brm-src",
   "license": "MIT",
   "description": "Pick a film for tonight from a quick mood quiz, or from your Letterboxd watchlist. Powered by mood-watch.app.",

@@ -12,6 +12,7 @@ The helper never writes anything to disk and never stores the username.
 """
 import base64
 import json
+import os
 import sys
 import urllib.error
 import urllib.parse
@@ -54,9 +55,16 @@ def _fail(code):
 
 
 def _read_request():
-    raw = sys.stdin.read()
-    # The QML helper protocol terminates input with \u001e.
-    raw = raw.replace("\u001e", "").strip()
+    """Read one QML request without waiting for stdin EOF."""
+    chunks = []
+    while True:
+        chunk = os.read(sys.stdin.fileno(), 4096)
+        if not chunk:
+            break
+        chunks.append(chunk)
+        if b"\x1e" in chunk:
+            break
+    raw = b"".join(chunks).split(b"\x1e", 1)[0].decode("utf-8", "replace").strip()
     if not raw:
         return {}
     try:

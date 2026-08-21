@@ -77,6 +77,27 @@ class HelperCliTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"], "sync-token-missing")
 
+    def test_helper_answers_after_separator_without_stdin_eof(self):
+        import select
+
+        proc = subprocess.Popen(
+            [sys.executable, str(Path(__file__).resolve().parent.parent / "omawatch.py")],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
+        assert proc.stdin is not None
+        assert proc.stdout is not None
+        proc.stdin.write(b'{"username":"bad user"}\x1e')
+        proc.stdin.flush()
+        ready, _, _ = select.select([proc.stdout], [], [], 3)
+        self.assertTrue(ready, "helper waited for EOF instead of the record separator")
+        result = json.loads(proc.stdout.readline())
+        proc.kill()
+        proc.wait(timeout=3)
+        proc.stdin.close()
+        proc.stdout.close()
+        self.assertEqual(result["error"], "unknown-command")
+
     def test_recommend_returns_films(self):
         result = self._run(
             "recommend",

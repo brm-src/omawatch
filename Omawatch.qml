@@ -338,6 +338,10 @@ Item {
     function hide(): string { root.close(); return "ok" }
     function toggle(): string { root.toggle(); return "ok" }
     function state(): string { return root.opened ? "open" : "closed" }
+    function home(): string { root.open(); root.phase = "home"; root.status = ""; return "ok" }
+    function quiz(): string { root.open(); root.startQuiz(false); return "ok" }
+    function letterboxd(): string { root.open(); root.phase = "letterboxd"; return "ok" }
+    function surprise(): string { root.open(); root.surpriseMe(); return "ok" }
   }
 
   Process {
@@ -778,10 +782,13 @@ Item {
                     ? Border.controlSpec("accent", Color.menu.text, Color.accent)
                     : Border.surfaceSpec("menu", "border", Color.menu.border, Math.max(1, Style.space(2)))
                   padding: Style.spacing.controlPaddingX
+                  height: Style.space(166)
                   visible: true
 
                   Row {
+                    id: filmRow
                     width: parent.width - parent.contentLeftInset - parent.contentRightInset
+                    height: parent.height - parent.contentTopInset - parent.contentBottomInset
                     spacing: Style.spacing.md
 
                     Image {
@@ -864,30 +871,36 @@ Item {
                 }
               }
 
-              Row {
+              Column {
                 width: parent.width
                 spacing: Style.spacing.md
 
                 Button {
+                  width: parent.width
                   text: root.words("← otro ánimo", "← another mood")
                   active: !root.busy
                   onClicked: { root.resetQuiz(); root.phase = "quiz" }
                 }
 
-                Item { width: Math.max(0, parent.width - againBtn.width - homeBtn.width - parent.spacing * 2); height: 1 }
+                Row {
+                  width: parent.width
+                  spacing: Style.spacing.md
 
-                Button {
-                  id: againBtn
-                  text: root.words("otra ronda", "another round")
-                  active: !root.busy
-                  onClicked: root.finishQuiz()
-                }
+                  Item { width: Math.max(0, parent.width - againBtn.width - homeBtn.width - parent.spacing); height: 1 }
 
-                Button {
-                  id: homeBtn
-                  text: root.words("inicio", "home")
-                  active: !root.busy
-                  onClicked: { root.phase = "home" }
+                  Button {
+                    id: againBtn
+                    text: root.words("otra ronda", "another round")
+                    active: !root.busy
+                    onClicked: root.finishQuiz()
+                  }
+
+                  Button {
+                    id: homeBtn
+                    text: root.words("inicio", "home")
+                    active: !root.busy
+                    onClicked: { root.phase = "home" }
+                  }
                 }
               }
             }
