@@ -10,7 +10,7 @@ Item {
 
   readonly property string pluginId: "io.github.brm-src.omawatch"
   readonly property bool isSpanish: uiLanguage === "es"
-  readonly property int cardWidth: Math.min(Style.space(620), panel.width - Style.gapsOut * 2)
+  readonly property int cardWidth: Math.min(Style.space(700), panel.width - Style.gapsOut * 2)
   property bool opened: false
   property bool busy: false
   property int requestId: 0
@@ -686,7 +686,7 @@ Item {
               TextField {
                 id: userField
                 width: parent.width
-                placeholderText: root.words("ej: brm", "e.g. brm")
+                placeholderText: root.words("ej: callmeout", "e.g. callmeout")
                 text: root.username
                 onTextChanged: { root.username = text }
                 onAccepted: root.startSync()
@@ -771,11 +771,17 @@ Item {
               visible: root.phase === "results"
               spacing: Style.spacing.md
 
-              Repeater {
+              ListView {
+                id: resultsList
+                width: parent.width
+                height: Math.max(0, root.films.length * Style.space(166) + Math.max(0, root.films.length - 1) * Style.spacing.md)
                 model: root.films
+                spacing: Style.spacing.md
+                interactive: false
+                clip: false
 
                 delegate: BorderSurface {
-                  width: parent.width
+                  width: resultsList.width
                   radius: Style.cornerRadius
                   color: index === 0 ? Style.controlFill(false, false, Color.menu.text, Color.accent) : Color.menu.background
                   borderSpec: index === 0
@@ -821,6 +827,8 @@ Item {
                         font.pixelSize: Style.font.body
                         font.bold: index === 0
                         wrapMode: Text.Wrap
+                        maximumLineCount: 2
+                        elide: Text.ElideRight
                       }
 
                       Text {
@@ -833,6 +841,8 @@ Item {
                         font.family: Style.font.menuFamily
                         font.pixelSize: Style.font.caption
                         wrapMode: Text.Wrap
+                        maximumLineCount: 1
+                        elide: Text.ElideRight
                       }
 
                       Text {

@@ -25,7 +25,7 @@ It is deliberately not a tracker or a social feed. It answers one question: what
 ## What it does
 
 - **Quick mood test** — five questions (energy, appetite, time, tone, aftertaste) and it returns three picks with poster, year, director, runtime and overview.
-- **Letterboxd watchlist** — enter your username once, it reads your public watchlist, and the same quiz then picks from *your* list.
+- **Letterboxd watchlist** — enter your username once, it reads your public watchlist, and the same quiz then picks from *your* list. The public `@callmeout` account was used for the real screenshot/e2e check (466 watchlist titles).
 - **Surprise me** — no questions, a random wager from the catalog.
 - Picks include "where to watch" and Letterboxd links.
 - Bilingual UI (English/Spanish) following the system locale.

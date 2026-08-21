@@ -25,7 +25,7 @@ No es un tracker ni un feed social. Responde una sola pregunta: ¿qué veo hoy?
 ## Qué hace
 
 - **Test de ánimo rápido** — cinco preguntas (energía, antojo, tiempo, tono, regusto) y devuelve tres películas con póster, año, director, duración y sinopsis.
-- **Watchlist de Letterboxd** — escribe tu usuario una vez, lee tu watchlist pública, y el mismo test elige de *tu* lista.
+- **Watchlist de Letterboxd** — escribe tu usuario una vez, lee tu watchlist pública y el mismo test elige de *tu* lista. La cuenta pública `@callmeout` se usó para la prueba e2e real (466 títulos).
 - **Sorpréndeme** — sin preguntas, una apuesta del azar.
 - Cada película incluye enlaces para verla y a Letterboxd.
 - Interfaz bilingüe (español/inglés) según el idioma del sistema.
