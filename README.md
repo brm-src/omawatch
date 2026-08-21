@@ -1,35 +1,70 @@
 # omawatch
 
-[Español](README.es.md)
+<p align="center">
+  <a href="https://www.ko-fi.com/brmcl"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi" /></a>
+</p>
 
-![omawatch preview](preview.png)
+<p align="center">
+  <strong>A small, opinionated film picker for Omarchy.</strong><br />
+  Five mood questions, a public Letterboxd watchlist, or one blind wager for tonight.
+</p>
 
-![omawatch icon](icon.png)
+<p align="center">
+  <a href="https://github.com/brm-src/omawatch/releases"><img src="https://img.shields.io/github/v/release/brm-src/omawatch?style=flat-square&label=release" alt="Latest release" /></a>
+  <a href="https://github.com/brm-src/omawatch/blob/main/LICENSE"><img src="https://img.shields.io/github/license/brm-src/omawatch?style=flat-square" alt="MIT license" /></a>
+</p>
+
+<p align="center">
+  <img src="preview.png" alt="omawatch preview" />
+</p>
+
+A bilingual Omarchy / Quickshell panel powered by [mood-watch.app](https://mood-watch.app). It answers one question without becoming a tracker, social feed, or recommendation dashboard:
+
+> **What should I watch tonight?**
 
 ## Real screenshots
 
-These are captures from the running plugin on an Omarchy desktop, not mockups:
+These are captures from the running plugin on an Omarchy desktop, not mockups.
 
-- [home](screenshots/01-home-final.png) — mood test, Letterboxd and surprise actions.
-- [quiz](screenshots/02-quiz-final.png) — five-question mood flow.
-- [Letterboxd](screenshots/03-letterboxd-final.png) — public watchlist connection.
-- [results](screenshots/04-results-final.png) — three live recommendations from mood-watch.app.
-- [desktop bar](screenshots/05-desktop-bar.png) — the real bar context with the film icon.
+<p align="center">
+  <img src="screenshots/01-home-final.png" alt="omawatch home panel" />
+</p>
 
-The small film-reel icon in `icon.svg` is also used by the bar widget.
+<p align="center"><em>Home: mood test, surprise pick, public Letterboxd watchlist.</em></p>
 
-A bilingual Omarchy / Quickshell panel that picks a film for tonight. Answer a five-question mood quiz — or connect your Letterboxd username and get picks from your own watchlist. Powered by [mood-watch.app](https://mood-watch.app).
+<p align="center">
+  <img src="screenshots/02-quiz-final.png" alt="omawatch mood quiz" />
+</p>
 
-It is deliberately not a tracker or a social feed. It answers one question: what do I watch tonight?
+<p align="center"><em>Quiz: short, focused questions with compact controls.</em></p>
+
+<p align="center">
+  <img src="screenshots/03-letterboxd-final.png" alt="omawatch Letterboxd connection" />
+</p>
+
+<p align="center"><em>Letterboxd: public watchlist connection, no login or password.</em></p>
+
+<p align="center">
+  <img src="screenshots/04-results-final.png" alt="omawatch film recommendations" />
+</p>
+
+<p align="center"><em>Results: live posters, complete overviews, English presentation titles where appropriate, and localized descriptions.</em></p>
+
+<p align="center">
+  <img src="screenshots/05-desktop-bar.png" alt="omawatch in the Omarchy desktop bar" />
+</p>
+
+<p align="center"><em>The real bar context with the film icon.</em></p>
 
 ## What it does
 
-- **Quick mood test** — five questions (energy, appetite, time, tone, aftertaste) and it returns three picks with poster, year, director, runtime and overview.
-- **Letterboxd watchlist** — enter your username once, it reads your public watchlist, and the same quiz then picks from *your* list. The public `@callmeout` account was used for the real screenshot/e2e check (466 watchlist titles).
-- **Surprise me** — no questions, a random wager from the catalog.
-- Picks include "where to watch" and Letterboxd links.
-- Bilingual UI (English/Spanish) following the system locale.
-- The username is only used to read your public watchlist. Nothing is stored on disk and no account is created.
+- **Quick mood test** — five questions covering energy, appetite, time, tone, and aftertaste.
+- **Letterboxd watchlist** — enter a public username and pick only from your own watchlist. The public `@callmeout` account was used for the real sync check with 466 titles.
+- **Surprise me** — one curated blind pick without a questionnaire.
+- **Useful film cards** — poster, title, year, director, runtime, complete overview, where-to-watch link, and Letterboxd link.
+- **Presentation rule** — titles and posters stay in English unless the film is Spanish-language; overviews and genres follow the system language.
+- **Bilingual UI** — English or Spanish according to the system locale.
+- **Privacy by default** — no account, no password, no API key, and no watchlist data written to disk.
 
 ## Install
 
@@ -37,29 +72,31 @@ It is deliberately not a tracker or a social feed. It answers one question: what
 omarchy plugin add https://github.com/brm-src/omawatch.git --enable --yes
 ```
 
-No administrator privileges are required. The plugin needs Omarchy/Hyprland, Quickshell, Python 3, and an internet connection.
+No administrator privileges are required. The plugin needs Omarchy / Hyprland, Quickshell, Python 3, and an internet connection.
 
 ## Use
 
-1. Click the film icon in the bar.
-2. Choose **quick mood test**, **use my letterboxd watchlist**, or **surprise me**.
-3. For Letterboxd: type your username, wait for the sync, then answer the quiz.
-4. Read the three picks, open "where to watch ↗" or Letterboxd if one calls you.
+1. Click the film icon in the Omarchy bar.
+2. Choose **Quick mood test**, **Connect watchlist**, or **Surprise me**.
+3. For Letterboxd, enter a public username, wait for the sync, and answer the quiz.
+4. Read the picks and open **where to watch** or **Letterboxd** when useful.
 
-Press `Escape`, `Super + W`, or click outside the card to close.
+Press `Escape`, `Super + W`, or click outside the panel to close it.
 
 ## How it works
 
-1. `Omawatch.qml` renders the panel and the quiz, following the Omarchy design system (same fonts, colors, borders and spacing as the built-in panels).
-2. `omawatch.py` is a stateless helper: each action is one subprocess call that talks to the public mood-watch API over HTTPS.
-3. Mood answers map to the same scoring axes the web app uses (energy, risk, tone, trust, depth, runtime, company).
-4. Watchlist sync uses the public sync flow: start, poll until ready, then request picks restricted to the watchlist with the returned token. The token lives only in memory.
+1. `Omawatch.qml` renders the panel using Omarchy's own primitives, fonts, colors, borders, separators, action rows, and compact controls.
+2. `omawatch.py` is a stateless HTTPS helper for the public mood-watch API.
+3. Anonymous answers are mapped to the same editorial routes used by the web product.
+4. Spanish presentation fetches the English title/poster variant in parallel while keeping the overview in Spanish.
+5. Letterboxd sync starts and polls a public read-only job; its short-lived token stays in memory only.
 
 ## Privacy
 
 - No text, username, or watchlist data is written to disk.
-- Only the public Letterboxd watchlist is read; no login, no password, no API keys.
-- Requests go to `moodwatch-api.brmcl.workers.dev` (Cloudflare). See the [mood-watch privacy notes](https://mood-watch.app).
+- Only a public Letterboxd watchlist is read; there is no login flow.
+- Requests go to `moodwatch-api.brmcl.workers.dev` through HTTPS.
+- See the [mood-watch privacy notes](https://mood-watch.app).
 
 ## Remove
 
@@ -87,3 +124,7 @@ omarchy plugin validate .
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+<p align="center">
+  <a href="https://www.ko-fi.com/brmcl"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi" /></a>
+</p>

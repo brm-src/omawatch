@@ -87,3 +87,7 @@ omarchy plugin validate .
 ## Licencia
 
 MIT. Consulta [LICENSE](LICENSE).
+
+<p align="center">
+  <a href="https://www.ko-fi.com/brmcl"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Apóyame en Ko-fi" /></a>
+</p>

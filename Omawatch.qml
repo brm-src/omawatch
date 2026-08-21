@@ -16,7 +16,7 @@ Item {
     : root.phase === "quiz"
       ? Style.space(340)
       : root.phase === "letterboxd" || root.phase === "syncing"
-        ? Style.space(460)
+        ? Style.space(280)
         : Style.space(340)
   property bool opened: false
   property bool busy: false
