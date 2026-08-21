@@ -11,7 +11,7 @@ BarIconButton {
   slotSize: bar ? bar.barSize : 27
   opticalSize: 16
   fontSize: 12
-  text: "◐"
+  text: "\uf008"
   tooltipText: root.isSpanish
     ? "omawatch · qué ver hoy, según tu ánimo"
     : "omawatch · what to watch tonight, by mood"
