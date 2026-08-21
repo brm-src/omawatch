@@ -18,7 +18,7 @@ Item {
       ? Style.space(340)
       : root.phase === "letterboxd" || root.phase === "syncing"
         ? Style.space(460)
-        : Style.space(240)
+        : Style.space(340)
   property bool opened: false
   property bool busy: false
   property int requestId: 0
@@ -39,6 +39,24 @@ Item {
   property bool usingWatchlist: false
 
   function words(es, en) { return root.isSpanish ? es : en }
+
+  function isChipQuestion() {
+    return root.currentQuestion && ["runtime", "tone"].indexOf(root.currentQuestion.key) !== -1
+  }
+
+  function quizOptionLabel(option) {
+    if (!root.currentQuestion || !option) return ""
+    if (root.currentQuestion.key === "runtime") {
+      if (option.value === "short") return root.words("corto", "short")
+      if (option.value === "medium") return root.words("medio", "medium")
+      if (option.value === "long") return root.words("largo", "long")
+    }
+    if (root.currentQuestion.key === "tone") {
+      if (option.value === "dark") return root.words("oscuro", "dark")
+      if (option.value === "light") return root.words("luminoso", "light")
+    }
+    return root.isSpanish ? option.es : option.en
+  }
 
   readonly property var quiz: [
     {
@@ -387,6 +405,65 @@ Item {
     onTriggered: root.pollSync()
   }
 
+  // Display-panel action row: full-width hover surface with a bold title and
+  // a dimmed one-line description. Mirrors the first-party row grammar.
+  component ActionRow: CursorSurface {
+    id: actionRow
+
+    property string title: ""
+    property string description: ""
+    property bool enabled: true
+    signal clicked()
+
+    implicitHeight: actionContent.implicitHeight + Style.spacing.rowPaddingX * 2
+    foreground: Color.menu.text
+    accent: Color.accent
+    radius: Style.cornerRadius
+
+    MouseArea {
+      id: actionMouse
+      anchors.fill: parent
+      enabled: actionRow.enabled
+      cursorShape: actionRow.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+      onClicked: if (actionRow.enabled) actionRow.clicked()
+    }
+
+    Column {
+      id: actionContent
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.leftMargin: Style.space(10)
+      anchors.rightMargin: Style.space(10)
+      spacing: Style.spacing.xs
+
+      Text {
+        textFormat: Text.PlainText
+        width: parent.width
+        text: actionRow.title
+        color: actionRow.enabled ? actionRow.foreground : Qt.darker(actionRow.foreground, 2.0)
+        font.family: Style.font.menuFamily
+        font.pixelSize: Style.font.body
+        font.bold: true
+        elide: Text.ElideRight
+        maximumLineCount: 1
+      }
+
+      Text {
+        textFormat: Text.PlainText
+        width: parent.width
+        visible: actionRow.description !== ""
+        text: actionRow.description
+        color: actionRow.foreground
+        opacity: actionRow.enabled ? 0.55 : 0.3
+        font.family: Style.font.menuFamily
+        font.pixelSize: Style.font.caption
+        elide: Text.ElideRight
+        maximumLineCount: 1
+      }
+    }
+  }
+
   PanelWindow {
     id: panel
     screen: Quickshell.screens[0]
@@ -551,73 +628,89 @@ Item {
             width: content.width
             spacing: Style.spacing.md
 
-            // HOME
+            // HOME — Display-panel grammar: sections, dividers, label rows.
             Column {
               width: parent.width
               visible: root.phase === "home"
-              spacing: Style.spacing.md
+              spacing: Style.spacing.sm
 
-              Button {
+              opacity: root.busy ? 0.45 : 1.0
+              Behavior on opacity { NumberAnimation { duration: 150 } }
+
+              ActionRow {
                 width: parent.width
-                selected: true
-                active: !root.busy
-                text: root.words("test de ánimo rápido", "quick mood test")
-                tooltipText: root.words("Cinco preguntas y te recomiendo una película.", "Five questions and I recommend a film.")
+                enabled: !root.busy
+                title: root.words("Test de ánimo", "Quick mood test")
+                description: root.words("Cinco preguntas y una película para hoy.", "Five questions and one film for tonight.")
                 onClicked: root.startQuiz(false)
               }
 
-              Button {
+              ActionRow {
                 width: parent.width
-                active: !root.busy
-                visible: root.watchlistToken === ""
-                text: root.words("usar mi watchlist de letterboxd", "use my letterboxd watchlist")
-                tooltipText: root.words("Conecta tu cuenta y elige de tu propia lista.", "Connect your account and pick from your own list.")
-                onClicked: { root.phase = "letterboxd"; root.status = "" }
+                enabled: !root.busy
+                title: root.words("Sorpréndeme", "Surprise me")
+                description: root.words("Sin preguntas, una apuesta del azar.", "No questions, a random wager.")
+                onClicked: root.surpriseMe()
               }
+
+              PanelSeparator { foreground: Color.menu.text }
 
               Column {
                 width: parent.width
-                visible: root.watchlistToken !== ""
-                spacing: Style.spacing.sm
+                spacing: Style.spacing.xs
 
-                Button {
+                PanelSectionHeader {
                   width: parent.width
-                  selected: true
-                  active: !root.busy
-                  text: root.words("elegir de mi watchlist", "pick from my watchlist")
-                  tooltipText: root.words("Test de ánimo + tu watchlist de Letterboxd.", "Mood test + your Letterboxd watchlist.")
-                  onClicked: root.startQuiz(true)
+                  foreground: Color.menu.text
+                  fontFamily: Style.font.menuFamily
+                  text: root.watchlistToken !== ""
+                    ? root.words("CUENTA · @" + root.username.toUpperCase(), "ACCOUNT · @" + root.username.toUpperCase())
+                    : root.words("WATCHLIST DE LETTERBOXD", "LETTERBOXD WATCHLIST")
                 }
 
-                Text {
-                  textFormat: Text.PlainText
+                ActionRow {
                   width: parent.width
-                  text: root.words("Conectado como @" + root.username, "Connected as @" + root.username)
-                  color: Color.menu.text
-                  opacity: 0.55
-                  font.family: Style.font.menuFamily
-                  font.pixelSize: Style.font.caption
+                  enabled: !root.busy
+                  visible: root.watchlistToken === ""
+                  title: root.words("Conectar watchlist", "Connect watchlist")
+                  description: root.words("Elige solo de tu propia lista.", "Pick only from your own list.")
+                  onClicked: { root.phase = "letterboxd"; root.status = "" }
                 }
 
-                Button {
-                  text: root.words("desconectar", "disconnect")
-                  active: !root.busy
-                  onClicked: root.disconnectLetterboxd()
+                Row {
+                  width: parent.width
+                  visible: root.watchlistToken !== ""
+                  height: disconnectBtn.height
+                  spacing: Style.spacing.md
+
+                  ActionRow {
+                    id: pickWlBtn
+                    width: parent.width - disconnectBtn.width - parent.spacing
+                    enabled: !root.busy
+                    title: root.words("Elegir de mi watchlist", "Pick from my watchlist")
+                    description: root.words("Test de ánimo sobre tu lista.", "Mood test over your list.")
+                    onClicked: root.startQuiz(true)
+                  }
+
+                  PanelActionButton {
+                    id: disconnectBtn
+                    anchors.verticalCenter: parent.verticalCenter
+                    iconText: "×"
+                    foreground: Color.menu.text
+                    fontFamily: Style.font.menuFamily
+                    tooltipText: root.words("Desconectar watchlist", "Disconnect watchlist")
+                    enabled: !root.busy
+                    onClicked: root.disconnectLetterboxd()
+                  }
                 }
               }
 
-              Button {
-                width: parent.width
-                active: !root.busy
-                text: root.words("sorpréndeme", "surprise me")
-                tooltipText: root.words("Sin preguntas, una apuesta del azar.", "No questions, a random wager.")
-                onClicked: root.surpriseMe()
-              }
+              PanelSeparator { foreground: Color.menu.text }
 
               Text {
                 textFormat: Text.PlainText
                 width: parent.width
-                text: root.words("No guardamos nada: el usuario solo sirve para leer tu watchlist pública.", "Nothing is stored: the username is only used to read your public watchlist.")
+                text: root.words("Nada se guarda: el usuario solo lee tu watchlist pública.", "Nothing is stored: the username only reads your public watchlist.")
                 color: Color.menu.text
                 opacity: 0.45
                 font.family: Style.font.menuFamily
@@ -626,11 +719,14 @@ Item {
               }
             }
 
-            // QUIZ
+            // QUIZ — chips for discrete axes, buttons for open ones.
             Column {
               width: parent.width
               visible: root.phase === "quiz"
               spacing: Style.spacing.md
+
+              opacity: root.busy ? 0.45 : 1.0
+              Behavior on opacity { NumberAnimation { duration: 150 } }
 
               Text {
                 textFormat: Text.PlainText
@@ -643,7 +739,24 @@ Item {
                 wrapMode: Text.Wrap
               }
 
+              ButtonGroup {
+                width: parent.width
+                visible: root.isChipQuestion()
+                focusable: false
+                enabled: !root.busy
+                foreground: Color.menu.text
+                background: Color.menu.background
+                accent: Color.accent
+                fontFamily: Style.font.menuFamily
+                value: ""
+                options: root.currentQuestion ? root.currentQuestion.options.map(function(o) {
+                  return { value: o.value, label: root.quizOptionLabel(o) }
+                }) : []
+                onChanged: root.answerQuestion(value)
+              }
+
               Repeater {
+                visible: !root.isChipQuestion()
                 model: root.currentQuestion ? root.currentQuestion.options : []
 
                 delegate: Button {
