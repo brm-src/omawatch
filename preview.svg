@@ -1,0 +1,40 @@
+<svg width="1600" height="1000" viewBox="0 0 1600 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="1000" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111218"/><stop offset="1" stop-color="#18131A"/>
+    </linearGradient>
+    <filter id="shadow" x="250" y="120" width="1100" height="800" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="24" stdDeviation="30" flood-color="#000" flood-opacity=".62"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <circle cx="1370" cy="110" r="310" fill="#E0228F" fill-opacity=".11"/>
+  <circle cx="120" cy="930" r="240" fill="#E0228F" fill-opacity=".07"/>
+  <text x="100" y="112" fill="#F7F5F7" font-family="sans-serif" font-size="46" font-weight="700">omawatch</text>
+  <text x="100" y="164" fill="#B7B1B7" font-family="sans-serif" font-size="25">pick a film for tonight · mood quiz or your letterboxd watchlist</text>
+  <g filter="url(#shadow)">
+    <rect x="300" y="220" width="1000" height="570" rx="16" fill="#1A181C" stroke="#4E4750" stroke-width="2"/>
+    <text x="350" y="292" fill="#F7F5F7" font-family="sans-serif" font-size="31" font-weight="700">omawatch</text>
+    <text x="350" y="325" fill="#B7B1B7" font-family="sans-serif" font-size="18">What to watch tonight, by mood</text>
+    <text x="1250" y="295" fill="#E5DFE5" font-family="sans-serif" font-size="30">×</text>
+    <rect x="350" y="350" width="900" height="1" fill="#4E4750"/>
+
+    <text x="350" y="392" fill="#DED8DE" font-family="sans-serif" font-size="21">Question 2 of 5</text>
+    <text x="350" y="428" fill="#F7F5F7" font-family="sans-serif" font-size="22" font-weight="600">What's the appetite?</text>
+
+    <rect x="350" y="448" width="900" height="46" rx="10" fill="#252227" stroke="#4E4750"/>
+    <text x="375" y="477" fill="#DED8DE" font-family="sans-serif" font-size="17">Comfort, something warm</text>
+    <rect x="350" y="504" width="900" height="46" rx="10" fill="#35152C" stroke="#E0228F" stroke-width="2"/>
+    <text x="375" y="533" fill="#FFD1EB" font-family="sans-serif" font-size="17">Feel deeply</text>
+    <rect x="350" y="560" width="900" height="46" rx="10" fill="#252227" stroke="#4E4750"/>
+    <text x="375" y="589" fill="#DED8DE" font-family="sans-serif" font-size="17">Horror</text>
+
+    <rect x="350" y="640" width="200" height="54" rx="10" fill="#252227" stroke="#4E4750"/>
+    <text x="375" y="674" fill="#DED8DE" font-family="sans-serif" font-size="17">← back</text>
+    <rect x="1130" y="640" width="120" height="54" rx="10" fill="#252227" stroke="#4E4750"/>
+    <text x="1150" y="674" fill="#DED8DE" font-family="sans-serif" font-size="17">skip</text>
+    <text x="1080" y="751" fill="#9D929D" font-family="sans-serif" font-size="14">powered by: mood-watch.app</text>
+  </g>
+  <rect x="100" y="890" width="265" height="1" fill="#E0228F"/>
+  <text x="100" y="940" fill="#C5BFC5" font-family="sans-serif" font-size="22">five questions · letterboxd watchlist · tells you where to watch</text>
+</svg>

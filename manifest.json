@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.brm-src.omawatch",
+  "name": "omawatch",
+  "version": "1.0.0",
+  "author": "Cris / brm-src",
+  "license": "MIT",
+  "description": "Pick a film for tonight from a quick mood quiz, or from your Letterboxd watchlist. Powered by mood-watch.app.",
+  "kinds": ["panel", "bar-widget"],
+  "keepLoaded": true,
+  "entryPoints": {
+    "panel": "Omawatch.qml",
+    "barWidget": "BarButton.qml"
+  },
+  "barWidget": {
+    "displayName": "omawatch",
+    "description": "Film picks for tonight, by mood or from your Letterboxd watchlist.",
+    "category": "Plugin",
+    "defaultSection": "right",
+    "allowMultiple": false
+  }
+}
