@@ -22,6 +22,10 @@ import urllib.request
 API = "https://moodwatch-api.brmcl.workers.dev"
 UA = "omawatch/1.0 (omarchy plugin)"
 TIMEOUT = 20
+# Hard cap on any single API response body. The largest real payload
+# (a full watchlist sync poll) stays far below this; the cap exists so a
+# compromised endpoint cannot exhaust memory in the shared shell process.
+MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 
 
 def _request(path, params=None, method="GET", body=None, headers=None):
@@ -33,12 +37,26 @@ def _request(path, params=None, method="GET", body=None, headers=None):
     if headers:
         head.update(headers)
     req = urllib.request.Request(url, data=data, headers=head, method=method)
+
+    def _read_capped(resp):
+        chunks = []
+        remaining = MAX_RESPONSE_BYTES
+        while remaining > 0:
+            chunk = resp.read(min(65536, remaining))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        return b"".join(chunks)
+
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            return resp.status, json.loads(resp.read().decode("utf-8", "replace"))
+            raw = _read_capped(resp)
+            return resp.status, json.loads(raw.decode("utf-8", "replace"))
     except urllib.error.HTTPError as exc:
         try:
-            return exc.code, json.loads(exc.read().decode("utf-8", "replace"))
+            raw = _read_capped(exc)
+            return exc.code, json.loads(raw.decode("utf-8", "replace"))
         except Exception:
             return exc.code, {}
     except Exception as exc:

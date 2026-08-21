@@ -205,6 +205,16 @@ Item {
     return /^https:\/\/[a-z0-9.-]+/i.test(url) ? url : ""
   }
 
+  // Poster images load inside the shared shell process, so the URL is
+  // restricted to https on known image hosts. Anything else renders as
+  // the empty placeholder instead of being fetched.
+  function safePosterUrl(value) {
+    var url = String(value || "").trim()
+    if (!/^https:\/\/[^/]*image\.tmdb\.org\//i.test(url)
+        && !/^https:\/\/[^/]*letterboxd\.com\//i.test(url)) return ""
+    return url
+  }
+
   function openFilmLink(film, field) {
     var url = root.safeHttpUrl(film ? film[field] : "")
     if (url !== "") Quickshell.execDetached(["xdg-open", url])
@@ -919,7 +929,8 @@ Item {
                       id: poster
                       width: Style.space(84)
                       height: Style.space(126)
-                      source: modelData.poster || ""
+                      // API-controlled URL: only https, only image hosts.
+                      source: root.safePosterUrl(modelData.poster)
                       fillMode: Image.PreserveAspectCrop
                       asynchronous: true
                       visible: modelData.poster !== undefined && modelData.poster !== null && modelData.poster !== ""
