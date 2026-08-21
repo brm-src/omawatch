@@ -60,6 +60,13 @@ class HelperCliTests(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"], "invalid-username")
 
+    def test_sync_start_propagates_cached_watchlist_token(self):
+        result = self._run("sync-start", {"username": "brm"})
+        self.assertTrue(result["ok"], result)
+        self.assertIn(result.get("status"), ("ready", "ready_partial", "queued"))
+        if result.get("status") in ("ready", "ready_partial"):
+            self.assertTrue(result.get("watchlist_token"))
+
     def test_recommend_rejects_empty_watchlist_token(self):
         result = self._run("recommend-wl", {"answers": {}})
         self.assertFalse(result["ok"])

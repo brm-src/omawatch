@@ -279,6 +279,14 @@ Item {
         return
       }
       root.syncToken = response.sync_token || ""
+      // Cached watchlist: the sync response already carries the token.
+      if (response.watchlist_token) {
+        root.watchlistToken = response.watchlist_token
+        root.phase = "quiz"
+        root.resetQuiz()
+        root.status = root.words("Watchlist lista. Responde y te elijo de ahí.", "Watchlist ready. Answer and I'll pick from it.")
+        return
+      }
       pollTimer.interval = Math.max(1000, response.next_poll_after_ms || 3000)
       pollTimer.restart()
     })

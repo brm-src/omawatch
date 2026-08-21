@@ -209,14 +209,16 @@ def cmd_sync_start(request):
     )
     if status != 200 or not data.get("ok"):
         _fail(data.get("error") or "sync-unavailable")
-    _ok(
-        {
-            "ok": True,
-            "sync_token": data.get("sync_token"),
-            "status": data.get("status"),
-            "next_poll_after_ms": data.get("next_poll_after_ms") or 3000,
-        }
-    )
+    # A cached watchlist returns ready immediately with its own token.
+    payload = {
+        "ok": True,
+        "sync_token": data.get("sync_token"),
+        "status": data.get("status"),
+        "next_poll_after_ms": data.get("next_poll_after_ms") or 3000,
+    }
+    if data.get("status") in ("ready", "ready_partial") and data.get("watchlist_token"):
+        payload["watchlist_token"] = data.get("watchlist_token")
+    _ok(payload)
 
 
 def cmd_sync_status(request):
